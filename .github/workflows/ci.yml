@@ -32,11 +32,13 @@ jobs:
       run:
         working-directory: apps/api
     steps:
+      - uses: actions/checkout@v4
+      # Must run after checkout: the job's default working-directory
+      # (apps/api) only exists once the repo is checked out.
       - name: Create non-superuser application role
         run: |
           PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE ROLE propman LOGIN PASSWORD 'propman' NOSUPERUSER CREATEDB;"
           PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE propman OWNER propman;"
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
