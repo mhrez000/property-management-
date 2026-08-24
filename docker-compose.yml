@@ -2,17 +2,18 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      # The app role is deliberately NOT a superuser: RLS policies do not bind
-      # superusers, and tenant isolation must hold for the app connection.
-      POSTGRES_USER: propman
-      POSTGRES_PASSWORD: propman
-      POSTGRES_DB: propman
+      # Boot as the default superuser; the init script creates the app role
+      # `propman` as a NON-superuser. RLS policies do not bind superusers,
+      # so tenant isolation must never run over a superuser connection.
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./infra/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U propman"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 10

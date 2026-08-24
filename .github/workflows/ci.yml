@@ -12,12 +12,15 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: propman
-          POSTGRES_PASSWORD: propman
-          POSTGRES_DB: propman
+          # Boot as the default superuser; the app role is created as a
+          # NON-superuser in a step below. RLS policies do not bind
+          # superusers, so the tenant-isolation tests fail (by design) if
+          # the app connects as one.
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U propman"
+          --health-cmd "pg_isready -U postgres"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -29,6 +32,10 @@ jobs:
       run:
         working-directory: apps/api
     steps:
+      - name: Create non-superuser application role
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE ROLE propman LOGIN PASSWORD 'propman' NOSUPERUSER CREATEDB;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE propman OWNER propman;"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
