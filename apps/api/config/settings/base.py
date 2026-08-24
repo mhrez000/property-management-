@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "ledger",
     "payments",
     "compliance",
+    "automation",
 ]
 
 MIDDLEWARE = [
@@ -119,6 +120,16 @@ CELERY_BROKER_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_TASK_ALWAYS_EAGER = False
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    "process-outbox": {
+        "task": "automation.tasks.process_outbox",
+        "schedule": 60.0,  # every minute
+    },
+    "evaluate-arrears": {
+        "task": "automation.tasks.evaluate_arrears",
+        "schedule": 60.0 * 60 * 24,  # daily
+    },
+}
 
 # Shared-secret HMAC key for inbound payment webhooks (per-provider secrets in
 # production; a single key is sufficient for the sandbox provider).

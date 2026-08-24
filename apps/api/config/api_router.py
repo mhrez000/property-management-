@@ -2,6 +2,13 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from accounts.api import me
+from automation.api import (
+    ArrearsCaseViewSet,
+    AutomationRuleViewSet,
+    CommunicationTemplateViewSet,
+    CommunicationViewSet,
+    OpsTaskViewSet,
+)
 from compliance.api import ComplianceRuleViewSet
 from ledger.api import (
     AccountViewSet,
@@ -36,6 +43,11 @@ router.register("ledger/reconciliations", ReconciliationViewSet, basename="ledge
 router.register("payments/references", TenancyPaymentReferenceViewSet)
 router.register("payments/incoming", IncomingPaymentViewSet)
 router.register("compliance/rules", ComplianceRuleViewSet)
+router.register("automation/rules", AutomationRuleViewSet)
+router.register("automation/tasks", OpsTaskViewSet)
+router.register("automation/templates", CommunicationTemplateViewSet)
+router.register("automation/communications", CommunicationViewSet)
+router.register("automation/arrears", ArrearsCaseViewSet)
 
 urlpatterns = router.urls + [
     path("me/", me, name="me"),

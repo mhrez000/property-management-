@@ -84,7 +84,7 @@ plan. Current status:
 - [x] Trust-accounting ledger engine (double-entry, immutable, reconciliation)
 - [x] Payments provider abstraction + webhook receipting (sandbox provider)
 - [x] State compliance rules engine, seeded for all 8 jurisdictions
-- [ ] Arrears automation (TCA engine + transactional outbox)
+- [x] Arrears automation (TCA engine + transactional outbox)
 - [ ] Owner/tenant/contractor portals (Next.js PWA)
 - [ ] Native inspection app (Expo, offline-first)
 - [ ] Maintenance integrations (Bricks+Agent / Tapi)

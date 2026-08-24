@@ -73,4 +73,18 @@ def process_notification(notification: PaymentNotification) -> IncomingPayment:
             )
             if created:
                 apply_receipt_to_charges(ref.tenancy_id, notification.amount_cents)
+                # Transactional outbox: downstream automation (arrears
+                # resolution, receipts comms) reacts only if this commits.
+                from automation.services import emit_event
+
+                emit_event(
+                    ref.organisation_id,
+                    "rent_received",
+                    {
+                        "tenancy_id": str(ref.tenancy_id),
+                        "amount_cents": notification.amount_cents,
+                        "provider_txn_id": notification.provider_txn_id,
+                    },
+                    occurred_at=notification.paid_at,
+                )
             return payment
