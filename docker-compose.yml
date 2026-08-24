@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      # The app role is deliberately NOT a superuser: RLS policies do not bind
+      # superusers, and tenant isolation must hold for the app connection.
+      POSTGRES_USER: propman
+      POSTGRES_PASSWORD: propman
+      POSTGRES_DB: propman
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U propman"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build: ./apps/api
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://propman:propman@db:5432/propman
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./apps/api:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build: ./apps/api
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://propman:propman@db:5432/propman
+      REDIS_URL: redis://redis:6379/0
+    command: celery -A config worker -l info -B
+    volumes:
+      - ./apps/api:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  pgdata:
