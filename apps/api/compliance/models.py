@@ -56,3 +56,6 @@ class ComplianceRule(TimeStampedModel):
 
     def __str__(self):
         return f"{self.jurisdiction} {self.rule_type} from {self.effective_from}"
+
+
+from compliance.models_bonds import BondLodgement  # noqa: E402,F401  (registers the model)

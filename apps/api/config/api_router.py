@@ -10,6 +10,7 @@ from automation.api import (
     OpsTaskViewSet,
 )
 from compliance.api import ComplianceRuleViewSet
+from compliance.api_bonds import BondLodgementViewSet
 from ledger.api import (
     AccountViewSet,
     JournalEntryViewSet,
@@ -17,6 +18,7 @@ from ledger.api import (
     ReconciliationViewSet,
     TrustAccountViewSet,
 )
+from ledger.api_disbursements import DisbursementRunViewSet
 from payments.api import IncomingPaymentViewSet, TenancyPaymentReferenceViewSet
 from payments.views import payment_webhook
 from portfolio.api import (
@@ -40,6 +42,8 @@ router.register("ledger/accounts", AccountViewSet, basename="ledger-account")
 router.register("ledger/entries", JournalEntryViewSet, basename="ledger-entry")
 router.register("ledger/receipts", ReceiptViewSet, basename="ledger-receipt")
 router.register("ledger/reconciliations", ReconciliationViewSet, basename="ledger-reconciliation")
+router.register("ledger/disbursement-runs", DisbursementRunViewSet, basename="disbursement-run")
+router.register("bonds", BondLodgementViewSet, basename="bond")
 router.register("payments/references", TenancyPaymentReferenceViewSet)
 router.register("payments/incoming", IncomingPaymentViewSet)
 router.register("compliance/rules", ComplianceRuleViewSet)

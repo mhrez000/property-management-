@@ -1,4 +1,7 @@
 from rest_framework import serializers, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 
 from common.drf import OrgScopedViewMixin
 from common.permissions import OrgRolePermission
@@ -39,6 +42,7 @@ class PropertySerializer(serializers.ModelSerializer):
             "car_spaces",
             "assigned_manager",
             "is_active",
+            "management_fee_bps",
             "created_at",
         ]
 
@@ -70,6 +74,17 @@ class TenancyViewSet(OrgScopedModelViewSet):
     queryset = Tenancy.objects.all().order_by("-created_at")
     serializer_class = TenancySerializer
     filterset_fields = ["property"]
+
+    @action(detail=True, methods=["post"])
+    def allocate(self, request, version=None, pk=None):
+        """Allocate the tenancy sub-ledger balance to its owners (net of the
+        property's management fee). Finance/admin roles only."""
+        if not self.membership.can_move_money:
+            raise PermissionDenied("Allocations require a finance or admin role.")
+        from ledger.disbursements import allocate_tenancy_funds
+
+        entries = allocate_tenancy_funds(self.get_object(), created_by=request.user)
+        return Response({"entries_posted": len(entries)})
 
 
 class LeaseSerializer(serializers.ModelSerializer):

@@ -85,6 +85,8 @@ plan. Current status:
 - [x] Payments provider abstraction + webhook receipting (sandbox provider)
 - [x] State compliance rules engine, seeded for all 8 jurisdictions
 - [x] Arrears automation (TCA engine + transactional outbox)
+- [x] Bond lodgement workflows (jurisdiction-driven, trust-integrated)
+- [x] Owner allocation + month-end disbursement runs (approval-gated)
 - [ ] Owner/tenant/contractor portals (Next.js PWA)
 - [ ] Native inspection app (Expo, offline-first)
 - [ ] Maintenance integrations (Bricks+Agent / Tapi)
