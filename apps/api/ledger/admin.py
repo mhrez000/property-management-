@@ -3,12 +3,27 @@ from django.contrib import admin
 from ledger.models import (
     Account,
     BankTransaction,
+    DisbursementLine,
+    DisbursementRun,
     JournalEntry,
     Posting,
     Receipt,
     Reconciliation,
     TrustAccount,
 )
+
+
+class DisbursementLineInline(admin.TabularInline):
+    model = DisbursementLine
+    extra = 0
+    readonly_fields = ("owner", "amount_cents", "status", "entry")
+
+
+@admin.register(DisbursementRun)
+class DisbursementRunAdmin(admin.ModelAdmin):
+    list_display = ("period_end", "trust_account", "state", "approved_by", "executed_at")
+    list_filter = ("state",)
+    inlines = [DisbursementLineInline]
 
 
 class PostingInline(admin.TabularInline):

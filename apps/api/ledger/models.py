@@ -207,6 +207,80 @@ class BankTransaction(OrgScopedModel):
         indexes = [models.Index(fields=["organisation", "trust_account", "date"])]
 
 
+class DisbursementRun(OrgScopedModel):
+    """A month-end owner payout batch with an explicit approval gate.
+
+    Money movement is never automatic: a run is drafted (snapshotting owner
+    balances), APPROVED by a human with a finance role, and only then
+    executed. Execution is idempotent — each line's payout entry is keyed on
+    the line id, so a crashed run can be re-executed without double-paying.
+    """
+
+    class State(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        APPROVED = "approved", "Approved"
+        EXECUTED = "executed", "Executed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    ALLOWED_TRANSITIONS = {
+        State.DRAFT: {State.APPROVED, State.CANCELLED},
+        State.APPROVED: {State.EXECUTED, State.CANCELLED},
+        State.EXECUTED: set(),
+        State.CANCELLED: set(),
+    }
+
+    trust_account = models.ForeignKey(
+        TrustAccount, on_delete=models.PROTECT, related_name="disbursement_runs"
+    )
+    period_end = models.DateField()
+    state = models.CharField(max_length=16, choices=State.choices, default=State.DRAFT)
+    created_by = models.ForeignKey(
+        "accounts.User", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    approved_by = models.ForeignKey(
+        "accounts.User", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    executed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["organisation", "state"])]
+
+    def transition_to(self, new_state: str):
+        from django.core.exceptions import ValidationError
+
+        allowed = self.ALLOWED_TRANSITIONS[self.State(self.state)]
+        if self.State(new_state) not in allowed:
+            raise ValidationError(
+                f"Invalid disbursement run transition {self.state} → {new_state}"
+            )
+        self.state = new_state
+
+
+class DisbursementLine(OrgScopedModel):
+    """One owner's payout within a run, snapshotted at draft time."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        PAID = "paid", "Paid"
+        SKIPPED = "skipped", "Skipped (insufficient balance at execution)"
+
+    run = models.ForeignKey(DisbursementRun, on_delete=models.CASCADE, related_name="lines")
+    owner = models.ForeignKey("portfolio.Owner", on_delete=models.PROTECT, related_name="+")
+    amount_cents = models.BigIntegerField()
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    entry = models.ForeignKey(
+        JournalEntry, null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["run", "owner"], name="uniq_disbursement_line_owner"),
+            models.CheckConstraint(
+                check=models.Q(amount_cents__gt=0), name="disbursement_amount_positive"
+            ),
+        ]
+
+
 class Reconciliation(OrgScopedModel):
     """A monthly three-way reconciliation record (the auditor's artefact)."""
 

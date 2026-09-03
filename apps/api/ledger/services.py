@@ -210,6 +210,15 @@ def ensure_owner_account(owner) -> Account:
     return account
 
 
+def ensure_bond_clearing_account(organisation_id) -> Account:
+    account, _ = Account.objects.get_or_create(
+        organisation_id=organisation_id,
+        subtype=Account.Subtype.BOND_CLEARING,
+        defaults={"name": "Bond clearing", "type": Account.Type.LIABILITY},
+    )
+    return account
+
+
 def ensure_agency_fees_account(organisation_id) -> Account:
     account, _ = Account.objects.get_or_create(
         organisation_id=organisation_id,

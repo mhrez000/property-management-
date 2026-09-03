@@ -1,6 +1,13 @@
 from django.contrib import admin
 
 from compliance.models import ComplianceRule
+from compliance.models_bonds import BondLodgement
+
+
+@admin.register(BondLodgement)
+class BondLodgementAdmin(admin.ModelAdmin):
+    list_display = ("lease", "jurisdiction", "amount_cents", "state", "due_date", "authority_name")
+    list_filter = ("state", "jurisdiction")
 
 
 @admin.register(ComplianceRule)

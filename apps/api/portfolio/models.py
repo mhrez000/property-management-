@@ -48,6 +48,10 @@ class Property(OrgScopedModel):
         related_name="managed_properties",
     )
     is_active = models.BooleanField(default=True)
+    management_fee_bps = models.PositiveIntegerField(
+        default=0,
+        help_text="Agency management fee in basis points of rent collected (e.g. 770 = 7.7%).",
+    )
 
     class Meta:
         verbose_name_plural = "properties"
